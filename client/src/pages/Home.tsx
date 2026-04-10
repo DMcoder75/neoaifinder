@@ -1,671 +1,406 @@
 import { useState, useMemo } from "react";
-import { motion } from "framer-motion";
-import {
-  Star,
-  Search,
-  ExternalLink,
-  Zap,
-  TrendingUp,
-  Users,
-  Award,
-  ChevronRight,
-  Sparkles,
-  Grid3x3,
-  List,
-} from "lucide-react";
-import { AI_CATEGORIES, AI_TOOLS, VISIONARY_POSSIBILITIES } from "../../../shared/const";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-
-/**
- * Neoaifinder - World's Greatest AI Discovery Platform
- * Design: Premium, innovative, space-efficient with 50+ visionary sections
- * Colors: Black (#0F0F0F), Purple (#9D4EDD), Maroon (#560BAD), White
- */
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.05, delayChildren: 0.1 },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 15 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
-};
+import { motion, AnimatePresence } from "framer-motion";
+import { Search, Filter, Star, TrendingUp, ChevronDown, X } from "lucide-react";
+import { VISIONARY_POSSIBILITIES, AI_TOOLS, AI_CATEGORIES } from "@/const";
 
 export default function Home() {
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortBy, setSortBy] = useState<"rating" | "reviews" | "name">("rating");
-  const [activeVisionaryTab, setActiveVisionaryTab] = useState("hallucinations");
-  const [toolsView, setToolsView] = useState<"grid" | "compact">("compact");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [sortBy, setSortBy] = useState("rating");
+  const [selectedVisionaryId, setSelectedVisionaryId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  const filteredAndSortedTools = useMemo(() => {
-    let tools = AI_TOOLS.filter((tool) => {
-      const matchesCategory = !selectedCategory || tool.category === selectedCategory;
-      const matchesSearch =
-        tool.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        tool.description.toLowerCase().includes(searchTerm.toLowerCase());
-      return matchesCategory && matchesSearch;
-    });
+  // Filter and sort tools
+  const filteredTools = useMemo(() => {
+    let filtered = AI_TOOLS;
 
-    if (sortBy === "rating") {
-      tools.sort((a, b) => b.rating - a.rating);
-    } else if (sortBy === "reviews") {
-      tools.sort((a, b) => b.reviews - a.reviews);
-    } else {
-      tools.sort((a, b) => a.name.localeCompare(b.name));
+    if (searchTerm) {
+      filtered = filtered.filter(
+        (tool) =>
+          tool.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          tool.description.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     }
 
-    return tools;
-  }, [selectedCategory, searchTerm, sortBy]);
+    if (selectedCategory !== "all") {
+      filtered = filtered.filter((tool) => tool.category === selectedCategory);
+    }
 
-  const stats = [
-    { label: "AI Tools", value: "33+", icon: Zap },
-    { label: "Visionary Sections", value: "50+", icon: Award },
-    { label: "Avg Rating", value: "4.7★", icon: Star },
-    { label: "Active Users", value: "500K+", icon: Users },
-  ];
+    // Sort
+    filtered.sort((a: typeof AI_TOOLS[0], b: typeof AI_TOOLS[0]) => {
+      if (sortBy === "rating") return b.rating - a.rating;
+      if (sortBy === "reviews") return b.reviews - a.reviews;
+      if (sortBy === "name") return a.name.localeCompare(b.name);
+      return 0;
+    });
 
-  const activeVisionarySection = VISIONARY_POSSIBILITIES.find(
-    (v) => v.id === activeVisionaryTab
-  );
+    return filtered;
+  }, [searchTerm, selectedCategory, sortBy]);
 
-  // Group visionary sections by category
-  const visionaryGroups = {
-    perception: VISIONARY_POSSIBILITIES.slice(0, 5),
-    sports: VISIONARY_POSSIBILITIES.slice(5, 12),
-    science: VISIONARY_POSSIBILITIES.slice(12, 20),
-    entertainment: VISIONARY_POSSIBILITIES.slice(20, 25),
-    healthcare: VISIONARY_POSSIBILITIES.slice(25, 29),
-    environment: VISIONARY_POSSIBILITIES.slice(29, 32),
-    education: VISIONARY_POSSIBILITIES.slice(32, 34),
-    finance: VISIONARY_POSSIBILITIES.slice(34, 36),
-    transportation: VISIONARY_POSSIBILITIES.slice(36, 38),
-    agriculture: VISIONARY_POSSIBILITIES.slice(38, 40),
-    language: VISIONARY_POSSIBILITIES.slice(40, 42),
-    ethics: VISIONARY_POSSIBILITIES.slice(42, 44),
-    neuroscience: VISIONARY_POSSIBILITIES.slice(44, 46),
-    fashion: VISIONARY_POSSIBILITIES.slice(46, 47),
-    urban: VISIONARY_POSSIBILITIES.slice(47, 48),
-  };
+    const selectedVisionary = selectedVisionaryId
+    ? VISIONARY_POSSIBILITIES.find((v: typeof VISIONARY_POSSIBILITIES[0]) => v.id === selectedVisionaryId)
+    : null;
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      {/* Animated Background */}
-      <div className="fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0F0F0F] via-[#1A0F2E] to-[#0F0F0F]" />
+    <div className="min-h-screen bg-gradient-to-br from-black via-purple-950 to-maroon-950 text-white overflow-hidden">
+      {/* Animated background orbs */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <motion.div
-          className="absolute top-0 left-1/4 w-96 h-96 bg-purple-900/20 rounded-full blur-3xl"
-          animate={{ y: [0, 50, 0], x: [0, 30, 0] }}
-          transition={{ duration: 8, repeat: Infinity }}
+          className="absolute w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"
+          animate={{ x: [0, 100, 0], y: [0, 50, 0] }}
+          transition={{ duration: 20, repeat: Infinity }}
+          style={{ top: "10%", left: "10%" }}
         />
         <motion.div
-          className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-800/10 rounded-full blur-3xl"
-          animate={{ y: [0, -50, 0], x: [0, -30, 0] }}
-          transition={{ duration: 10, repeat: Infinity }}
+          className="absolute w-96 h-96 bg-maroon-500/10 rounded-full blur-3xl"
+          animate={{ x: [0, -100, 0], y: [0, -50, 0] }}
+          transition={{ duration: 25, repeat: Infinity }}
+          style={{ bottom: "10%", right: "10%" }}
         />
       </div>
 
       {/* Header */}
-      <motion.header
-        className="sticky top-0 z-40 border-b border-border/50 backdrop-blur-md bg-background/80"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+      <header className="relative z-10 border-b border-purple-500/20 backdrop-blur-sm">
+        <div className="container mx-auto px-4 py-6">
           <motion.div
-            className="flex items-center gap-3 cursor-pointer"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="flex items-center justify-between mb-6"
           >
-            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-700 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">⚡</span>
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-maroon-600 rounded-lg flex items-center justify-center">
+                <span className="text-2xl">⚡</span>
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-maroon-400 bg-clip-text text-transparent">
+                  Neoaifinder
+                </h1>
+                <p className="text-sm text-purple-300">50+ Visionary AI Frontiers</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
-                Neoaifinder
-              </h1>
-              <p className="text-xs text-muted-foreground">50+ Visionary AI Frontiers</p>
-            </div>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="px-6 py-2 bg-gradient-to-r from-purple-600 to-maroon-600 rounded-lg font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all"
+            >
+              Submit Tool
+            </motion.button>
           </motion.div>
 
-          <motion.div
-            className="flex items-center gap-4"
+          {/* Hero text */}
+          <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
+            transition={{ delay: 0.3, duration: 0.6 }}
+            className="text-lg text-purple-200 text-center mb-8"
           >
-            <Button
-              variant="outline"
-              size="sm"
-              className="hidden sm:flex border-purple-500/30 hover:bg-purple-500/10"
-            >
-              <ExternalLink className="w-4 h-4 mr-2" />
-              Submit Tool
-            </Button>
-          </motion.div>
+            Explore mind-bending applications pushing the boundaries of what's possible
+          </motion.p>
         </div>
-      </motion.header>
+      </header>
 
-      {/* Hero Section */}
-      <motion.section
-        className="relative py-20 px-4 overflow-hidden"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-b from-background/50 to-background" />
+      {/* Main content */}
+      <main className="relative z-10 container mx-auto px-4 py-12">
+        {/* AI Tools Section */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="mb-16"
+        >
+          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+            <TrendingUp className="w-6 h-6 text-purple-400" />
+            33+ AI Tools Directory
+          </h2>
 
-        <div className="container mx-auto max-w-5xl relative z-10">
-          <motion.div
-            className="text-center mb-12"
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            <motion.h2
-              className="text-5xl md:text-6xl font-bold mb-4 leading-tight"
-              variants={itemVariants}
-            >
-              <span className="bg-gradient-to-r from-purple-400 via-purple-500 to-purple-600 bg-clip-text text-transparent">
-                The Future of AI
-              </span>
-              <br />
-              <span className="text-white">Awaits Discovery</span>
-            </motion.h2>
-            <motion.p
-              className="text-lg text-muted-foreground max-w-3xl mx-auto mb-8"
-              variants={itemVariants}
-            >
-              Explore 33+ AI tools and 50+ visionary frontiers. From mind-bending hallucinations to revolutionary sports AI, from digital resurrection to quantum computing.
-            </motion.p>
-
-            {/* Stats */}
-            <motion.div
-              className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10"
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-            >
-              {stats.map((stat) => {
-                const Icon = stat.icon;
-                return (
-                  <motion.div
-                    key={stat.label}
-                    className="bg-card border border-border/50 rounded-lg p-3 hover:border-purple-500/50 transition-all"
-                    variants={itemVariants}
-                    whileHover={{ y: -2 }}
-                  >
-                    <Icon className="w-4 h-4 text-purple-400 mx-auto mb-1" />
-                    <div className="text-xl font-bold text-purple-400">{stat.value}</div>
-                    <div className="text-xs text-muted-foreground">{stat.label}</div>
-                  </motion.div>
-                );
-              })}
-            </motion.div>
-          </motion.div>
-
-          {/* Search and Filter */}
-          <motion.div
-            className="flex flex-col sm:flex-row gap-3 mb-6"
-            variants={itemVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            <div className="flex-1 relative">
-              <Search className="absolute left-4 top-2.5 w-4 h-4 text-muted-foreground" />
-              <Input
+          {/* Search and filters */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div className="md:col-span-2 relative">
+              <Search className="absolute left-3 top-3 w-5 h-5 text-purple-400" />
+              <input
                 type="text"
                 placeholder="Search 33+ AI tools..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 bg-card border-border/50 focus:border-purple-500/50 text-sm"
+                className="w-full pl-10 pr-4 py-2 bg-purple-900/30 border border-purple-500/30 rounded-lg focus:outline-none focus:border-purple-500 text-white placeholder-purple-300"
               />
             </div>
+
             <select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as "rating" | "reviews" | "name")}
-              className="px-3 py-2 bg-card border border-border/50 rounded-lg text-foreground text-sm hover:border-purple-500/50 transition-all"
+              onChange={(e) => setSortBy(e.target.value)}
+              className="px-4 py-2 bg-purple-900/30 border border-purple-500/30 rounded-lg focus:outline-none focus:border-purple-500 text-white"
             >
               <option value="rating">Rating</option>
               <option value="reviews">Reviews</option>
               <option value="name">Name</option>
             </select>
-            <div className="flex gap-2 bg-card border border-border/50 rounded-lg p-1">
-              <button
-                onClick={() => setToolsView("compact")}
-                className={`p-2 rounded transition-all ${
-                  toolsView === "compact"
-                    ? "bg-purple-600 text-white"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <List className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setToolsView("grid")}
-                className={`p-2 rounded transition-all ${
-                  toolsView === "grid"
-                    ? "bg-purple-600 text-white"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <Grid3x3 className="w-4 h-4" />
-              </button>
-            </div>
-          </motion.div>
 
-          {/* Category Pills */}
-          <motion.div
-            className="flex flex-wrap gap-2 justify-center mb-4"
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-          >
+            <button
+              onClick={() => setViewMode(viewMode === "grid" ? "list" : "grid")}
+              className="px-4 py-2 bg-purple-900/30 border border-purple-500/30 rounded-lg hover:bg-purple-800/30 transition-colors"
+            >
+              {viewMode === "grid" ? "List" : "Grid"}
+            </button>
+          </div>
+
+          {/* Category filters */}
+          <div className="flex flex-wrap gap-2 mb-8">
             <motion.button
-              onClick={() => setSelectedCategory(null)}
-              className={`px-4 py-1.5 rounded-full font-medium text-sm transition-all ${
-                selectedCategory === null
-                  ? "bg-purple-600 text-white shadow-lg shadow-purple-600/50"
-                  : "bg-card border border-border/50 text-foreground hover:border-purple-500/50"
-              }`}
               whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              variants={itemVariants}
+              onClick={() => setSelectedCategory("all")}
+              className={`px-4 py-2 rounded-full font-semibold transition-all ${
+                selectedCategory === "all"
+                  ? "bg-gradient-to-r from-purple-600 to-maroon-600 text-white"
+                  : "bg-purple-900/30 text-purple-300 hover:bg-purple-800/30"
+              }`}
             >
               All ({AI_TOOLS.length})
             </motion.button>
-            {AI_CATEGORIES.map((category) => {
-              const count = AI_TOOLS.filter((t) => t.category === category.id).length;
-              return (
-                <motion.button
-                  key={category.id}
-                  onClick={() => setSelectedCategory(category.id)}
-                  className={`px-4 py-1.5 rounded-full font-medium text-sm transition-all flex items-center gap-1 ${
-                    selectedCategory === category.id
-                      ? "text-white shadow-lg"
-                      : "bg-card border border-border/50 text-foreground hover:border-purple-500/50"
-                  }`}
-                  style={{
-                    backgroundColor:
-                      selectedCategory === category.id ? category.color : undefined,
-                  }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  variants={itemVariants}
-                >
-                  <span className="text-sm">{category.icon}</span>
-                  <span className="hidden sm:inline">{category.name}</span>
-                  <span className="sm:hidden">{count}</span>
-                </motion.button>
-              );
-            })}
-          </motion.div>
-        </div>
-      </motion.section>
-
-      {/* AI Tools Section - Optimized */}
-      <motion.section
-        className="py-16 px-4 border-t border-border/50"
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        transition={{ duration: 0.6 }}
-        viewport={{ once: true }}
-      >
-        <div className="container mx-auto">
-          <motion.div
-            className="mb-8"
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-          >
-            <h3 className="text-3xl font-bold mb-1">
-              <span className="bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
-                AI Tools Directory
-              </span>
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              {filteredAndSortedTools.length} tools found • Curated & verified
-            </p>
-          </motion.div>
-
-          {filteredAndSortedTools.length > 0 ? (
-            <motion.div
-              className={
-                toolsView === "compact"
-                  ? "space-y-2"
-                  : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
-              }
-              variants={containerVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-            >
-              {filteredAndSortedTools.map((tool, idx) => (
-                <CompactToolCard key={tool.id} tool={tool} index={idx} view={toolsView} />
-              ))}
-            </motion.div>
-          ) : (
-            <motion.div
-              className="text-center py-12"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-            >
-              <p className="text-muted-foreground">No tools found. Try a different search.</p>
-            </motion.div>
-          )}
-        </div>
-      </motion.section>
-
-      {/* 50+ Visionary Possibilities Section */}
-      <motion.section
-        className="py-20 px-4 border-t border-border/50"
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        transition={{ duration: 0.6 }}
-        viewport={{ once: true }}
-      >
-        <div className="container mx-auto max-w-6xl">
-          <motion.div
-            className="mb-12 text-center"
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-          >
-            <h3 className="text-4xl font-bold mb-3">
-              <span className="bg-gradient-to-r from-purple-400 via-purple-500 to-purple-600 bg-clip-text text-transparent">
-                50+ Visionary AI Frontiers
-              </span>
-            </h3>
-            <p className="text-muted-foreground max-w-3xl mx-auto">
-              Explore mind-bending applications pushing the boundaries of what's possible
-            </p>
-          </motion.div>
-
-          {/* Visionary Categories Grid */}
-          <motion.div
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-12"
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-          >
-            {Object.entries(visionaryGroups).map(([groupName, sections]) => (
-              <motion.div
-                key={groupName}
-                className="bg-card border border-border/50 rounded-lg p-4 hover:border-purple-500/50 transition-all"
-                variants={itemVariants}
-                whileHover={{ y: -2 }}
+            {AI_CATEGORIES.map((cat: typeof AI_CATEGORIES[0]) => (
+              <motion.button
+                key={cat.id}
+                whileHover={{ scale: 1.05 }}
+                onClick={() => setSelectedCategory(cat.id)}
+                className={`px-4 py-2 rounded-full font-semibold transition-all ${
+                  selectedCategory === cat.id
+                    ? "bg-gradient-to-r from-purple-600 to-maroon-600 text-white"
+                    : "bg-purple-900/30 text-purple-300 hover:bg-purple-800/30"
+                }`}
               >
-                <h4 className="font-bold text-sm mb-3 capitalize text-purple-400">
-                  {groupName.replace(/([A-Z])/g, " $1")}
-                </h4>
-                <div className="space-y-2">
-                  {sections.map((section) => (
-                    <motion.button
-                      key={section.id}
-                      onClick={() => setActiveVisionaryTab(section.id)}
-                      className={`w-full text-left px-3 py-2 rounded text-sm transition-all ${
-                        activeVisionaryTab === section.id
-                          ? "bg-purple-600 text-white"
-                          : "hover:bg-purple-500/10 text-foreground"
-                      }`}
-                      whileHover={{ x: 4 }}
-                    >
-                      <span className="mr-2">{section.icon}</span>
-                      {section.title.split(" &")[0]}
-                    </motion.button>
-                  ))}
-                </div>
-              </motion.div>
+                {cat.icon} {cat.name}
+              </motion.button>
             ))}
-          </motion.div>
+          </div>
 
-          {/* Active Visionary Content */}
-          {activeVisionarySection && (
+          {/* Tools grid/list */}
+          <div
+            className={
+              viewMode === "grid"
+                ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+                : "space-y-3"
+            }
+          >
+            {filteredTools.map((tool: typeof AI_TOOLS[0], idx: number) => (
+              <motion.a
+                key={tool.id}
+                href={tool.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.05 }}
+                whileHover={{ scale: 1.02, y: -5 }}
+                className="p-4 bg-gradient-to-br from-purple-900/40 to-maroon-900/40 border border-purple-500/20 rounded-lg hover:border-purple-500/50 transition-all group cursor-pointer"
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <div>
+                    <h3 className="font-bold text-lg group-hover:text-purple-300 transition-colors">
+                      {tool.name}
+                    </h3>
+                    <p className="text-xs text-purple-400">{tool.category}</p>
+                  </div>
+                  <div className="flex items-center gap-1 bg-yellow-500/20 px-2 py-1 rounded">
+                    <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                    <span className="text-sm font-semibold">{tool.rating}</span>
+                  </div>
+                </div>
+                <p className="text-sm text-purple-200 mb-2">{tool.description}</p>
+                <p className="text-xs text-purple-400">{tool.pricing}</p>
+              </motion.a>
+            ))}
+          </div>
+        </motion.section>
+
+        {/* Visionary Possibilities Section */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="mb-16"
+        >
+          <h2 className="text-3xl font-bold mb-8 text-center bg-gradient-to-r from-purple-400 via-maroon-400 to-purple-400 bg-clip-text text-transparent">
+            50+ Visionary AI Frontiers
+          </h2>
+
+          {/* Visionary grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {VISIONARY_POSSIBILITIES.map((possibility: typeof VISIONARY_POSSIBILITIES[0], idx: number) => (
+              <motion.button
+                key={possibility.id}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: idx * 0.05 }}
+                whileHover={{ scale: 1.05, y: -10 }}
+                onClick={() =>
+                  setSelectedVisionaryId(
+                    selectedVisionaryId === possibility.id ? null : possibility.id
+                  )
+                }
+                className="relative p-6 bg-gradient-to-br from-purple-900/50 to-maroon-900/50 border-2 border-purple-500/30 rounded-xl hover:border-purple-500/70 transition-all text-left group overflow-hidden"
+              >
+                {/* Background gradient */}
+                <div
+                  className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity"
+                  style={{ backgroundColor: possibility.color }}
+                />
+
+                <div className="relative z-10">
+                  <div className="text-4xl mb-3">{possibility.icon}</div>
+                  <h3 className="font-bold text-lg mb-2 group-hover:text-purple-300 transition-colors">
+                    {possibility.title}
+                  </h3>
+                  <p className="text-sm text-purple-200">{possibility.description}</p>
+
+                  {/* Expand indicator */}
+                  <motion.div
+                    animate={{ rotate: selectedVisionaryId === possibility.id ? 180 : 0 }}
+                    className="mt-4 flex justify-end"
+                  >
+                    <ChevronDown className="w-5 h-5 text-purple-400" />
+                  </motion.div>
+                </div>
+              </motion.button>
+            ))}
+          </div>
+        </motion.section>
+
+        {/* Detailed Visionary Section */}
+        <AnimatePresence>
+          {selectedVisionary && (
             <motion.div
-              className="bg-card border border-border/50 rounded-xl p-8 md:p-10"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto"
+              onClick={() => setSelectedVisionaryId(null)}
             >
-              <div className="grid md:grid-cols-2 gap-8">
-                <div>
-                  <div className="flex items-center gap-4 mb-6">
-                    <div
-                      className="w-14 h-14 rounded-lg flex items-center justify-center text-3xl flex-shrink-0"
-                      style={{ backgroundColor: activeVisionarySection.color + "20" }}
-                    >
-                      {activeVisionarySection.icon}
-                    </div>
-                    <div>
-                      <h4 className="text-2xl font-bold">{activeVisionarySection.title}</h4>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {activeVisionarySection.description}
-                      </p>
-                    </div>
-                  </div>
+              <motion.div
+                initial={{ scale: 0.9 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0.9 }}
+                onClick={(e) => e.stopPropagation()}
+                className="bg-gradient-to-br from-black via-purple-950 to-maroon-950 border border-purple-500/30 rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-8 relative"
+              >
+                {/* Close button */}
+                <button
+                  onClick={() => setSelectedVisionaryId(null)}
+                  className="absolute top-4 right-4 p-2 hover:bg-purple-900/50 rounded-lg transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
 
-                  <div className="space-y-2">
-                    <h5 className="font-bold text-purple-400 text-sm">Key Possibilities:</h5>
-                    {activeVisionarySection.possibilities.map((possibility, idx) => (
-                      <motion.div
-                        key={idx}
-                        className="flex items-start gap-2 text-sm"
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: idx * 0.08 }}
-                      >
-                        <Sparkles className="w-4 h-4 text-purple-400 mt-0.5 flex-shrink-0" />
-                        <p className="text-foreground">{possibility}</p>
-                      </motion.div>
-                    ))}
+                {/* Header */}
+                <div className="mb-6">
+                  <div className="text-5xl mb-4">{selectedVisionary.icon}</div>
+                  <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-maroon-400 bg-clip-text text-transparent mb-2">
+                    {selectedVisionary.title}
+                  </h2>
+                  <p className="text-purple-200">{selectedVisionary.description}</p>
+                </div>
+
+                {/* Full content */}
+                <div className="prose prose-invert max-w-none mb-8">
+                  <div className="text-purple-100 whitespace-pre-wrap text-sm leading-relaxed">
+                    {selectedVisionary.fullContent}
                   </div>
                 </div>
 
-                <div>
-                  <div
-                    className="w-full h-64 rounded-lg bg-cover bg-center border border-border/50 mb-4"
-                    style={{
-                      backgroundColor: activeVisionarySection.color + "10",
-                      backgroundImage: `linear-gradient(135deg, ${activeVisionarySection.color}20 0%, transparent 100%)`,
-                    }}
-                  />
+                {/* Key sections */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                  {/* Possibilities */}
                   <div>
-                    <h5 className="font-bold text-purple-400 text-sm mb-3">Powered by:</h5>
+                    <h3 className="font-bold text-lg text-purple-300 mb-3">Key Possibilities</h3>
+                    <ul className="space-y-2">
+                      {selectedVisionary.possibilities.map((p: string, i: number) => (
+                        <li key={i} className="flex items-start gap-2 text-sm text-purple-200">
+                          <span className="text-maroon-400 mt-1">▸</span>
+                          <span>{p}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Tools */}
+                  <div>
+                    <h3 className="font-bold text-lg text-purple-300 mb-3">Powered by</h3>
                     <div className="flex flex-wrap gap-2">
-                      {activeVisionarySection.tools.map((tool, idx) => (
-                        <motion.span
-                          key={idx}
-                          className="px-3 py-1 bg-purple-600/20 border border-purple-500/30 rounded text-xs text-purple-300"
-                          whileHover={{ scale: 1.05 }}
+                      {selectedVisionary.tools.map((tool: string, i: number) => (
+                        <span
+                          key={i}
+                          className="px-3 py-1 bg-purple-900/50 border border-purple-500/30 rounded-full text-xs text-purple-200"
                         >
                           {tool}
-                        </motion.span>
+                        </span>
                       ))}
                     </div>
                   </div>
                 </div>
-              </div>
+
+                {/* Use cases and challenges */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                  <div>
+                    <h3 className="font-bold text-lg text-purple-300 mb-3">Use Cases</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedVisionary.useCases.map((uc: string, i: number) => (
+                        <span
+                          key={i}
+                          className="px-3 py-1 bg-maroon-900/50 border border-maroon-500/30 rounded-full text-xs text-maroon-200"
+                        >
+                          {uc}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="font-bold text-lg text-purple-300 mb-3">Challenges</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedVisionary.challenges.map((c: string, i: number) => (
+                        <span
+                          key={i}
+                          className="px-3 py-1 bg-yellow-900/50 border border-yellow-500/30 rounded-full text-xs text-yellow-200"
+                        >
+                          {c}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Future outlook */}
+                <div className="p-4 bg-gradient-to-r from-purple-900/30 to-maroon-900/30 border border-purple-500/30 rounded-lg">
+                  <h3 className="font-bold text-purple-300 mb-2">Future Outlook</h3>
+                  <p className="text-sm text-purple-200">{selectedVisionary.futureOutlook}</p>
+                </div>
+              </motion.div>
             </motion.div>
           )}
-        </div>
-      </motion.section>
+        </AnimatePresence>
+      </main>
 
-      {/* CTA Section */}
+      {/* Footer CTA */}
       <motion.section
-        className="py-16 px-4 border-t border-border/50"
         initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        transition={{ duration: 0.6 }}
-        viewport={{ once: true }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.8 }}
+        className="relative z-10 border-t border-purple-500/20 backdrop-blur-sm py-12"
       >
-        <div className="container mx-auto max-w-3xl text-center">
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-2xl font-bold mb-4">Discover Your Next AI Tool</h2>
+          <p className="text-purple-200 mb-6">
+            Help the community by submitting your favorite AI tool or innovative application.
+          </p>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="px-8 py-3 bg-gradient-to-r from-purple-600 to-maroon-600 rounded-lg font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all"
           >
-            <h3 className="text-2xl font-bold mb-3">
-              <span className="bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
-                Discover Your Next AI Tool
-              </span>
-            </h3>
-            <p className="text-muted-foreground mb-4 text-sm">
-              Help the community by submitting your favorite AI tool or innovative application.
-            </p>
-            <Button
-              size="lg"
-              className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white"
-            >
-              <ExternalLink className="w-4 h-4 mr-2" />
-              Submit a Tool
-            </Button>
-          </motion.div>
+            Submit a Tool
+          </motion.button>
         </div>
       </motion.section>
-
-      {/* Footer */}
-      <motion.footer
-        className="border-t border-border/50 py-10 px-4"
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        transition={{ duration: 0.6 }}
-        viewport={{ once: true }}
-      >
-        <div className="container mx-auto text-center text-muted-foreground text-sm">
-          <p className="mb-3">Neoaifinder © 2026 • The World's Greatest AI Discovery Platform</p>
-          <div className="flex justify-center gap-6 text-xs">
-            <a href="#" className="hover:text-purple-400 transition-colors">
-              About
-            </a>
-            <a href="#" className="hover:text-purple-400 transition-colors">
-              Privacy
-            </a>
-            <a href="#" className="hover:text-purple-400 transition-colors">
-              Terms
-            </a>
-            <a href="#" className="hover:text-purple-400 transition-colors">
-              Contact
-            </a>
-          </div>
-        </div>
-      </motion.footer>
     </div>
-  );
-}
-
-interface CompactToolCardProps {
-  tool: (typeof AI_TOOLS)[0];
-  index: number;
-  view: "grid" | "compact";
-}
-
-function CompactToolCard({ tool, index, view }: CompactToolCardProps) {
-  const category = AI_CATEGORIES.find((c) => c.id === tool.category);
-
-  if (view === "compact") {
-    return (
-      <motion.a
-        href={tool.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="group flex items-center gap-3 p-3 bg-card border border-border/50 rounded-lg hover:border-purple-500/50 transition-all"
-        variants={{
-          hidden: { opacity: 0, x: -10 },
-          visible: {
-            opacity: 1,
-            x: 0,
-            transition: { duration: 0.3, delay: index * 0.02 },
-          },
-        }}
-        whileHover={{ x: 4 }}
-      >
-        <div
-          className="w-8 h-8 rounded flex items-center justify-center text-sm flex-shrink-0"
-          style={{ backgroundColor: category?.color + "20" }}
-        >
-          {category?.icon}
-        </div>
-        <div className="flex-1 min-w-0">
-          <h4 className="font-bold text-sm text-foreground group-hover:text-purple-400 transition-colors truncate">
-            {tool.name}
-          </h4>
-          <p className="text-xs text-muted-foreground truncate">{category?.name}</p>
-        </div>
-        <div className="flex items-center gap-1 flex-shrink-0">
-          <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-          <span className="text-xs font-bold">{tool.rating}</span>
-        </div>
-        <ChevronRight className="w-4 h-4 text-purple-400 group-hover:translate-x-1 transition-transform" />
-      </motion.a>
-    );
-  }
-
-  return (
-    <motion.a
-      href={tool.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="group relative block h-full"
-      variants={{
-        hidden: { opacity: 0, y: 15 },
-        visible: {
-          opacity: 1,
-          y: 0,
-          transition: { duration: 0.3, delay: index * 0.03 },
-        },
-      }}
-      whileHover={{ y: -4 }}
-    >
-      <div className="relative bg-card border border-border/50 rounded-lg p-4 hover:border-purple-500/50 transition-all h-full flex flex-col">
-        <div className="flex items-start justify-between mb-2">
-          <div
-            className="w-8 h-8 rounded flex items-center justify-center text-base"
-            style={{ backgroundColor: category?.color + "20" }}
-          >
-            {category?.icon}
-          </div>
-          {tool.isFeatured && (
-            <motion.div
-              className="flex items-center gap-1 bg-purple-600/20 px-2 py-0.5 rounded-full"
-              animate={{ scale: [1, 1.1, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            >
-              <Star className="w-3 h-3 text-purple-400 fill-purple-400" />
-            </motion.div>
-          )}
-        </div>
-
-        <h4 className="font-bold text-sm text-foreground mb-1 line-clamp-1">{tool.name}</h4>
-        <p className="text-xs text-muted-foreground mb-2 line-clamp-2">{tool.description}</p>
-
-        <div className="flex flex-wrap gap-1 mb-3 mt-auto">
-          {tool.features.slice(0, 2).map((feature) => (
-            <span
-              key={feature}
-              className="text-xs bg-purple-500/10 text-purple-300 px-2 py-0.5 rounded whitespace-nowrap"
-            >
-              {feature}
-            </span>
-          ))}
-        </div>
-
-        <div className="flex items-center justify-between pt-2 border-t border-border/50">
-          <div className="flex items-center gap-1">
-            <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-            <span className="font-bold text-xs">{tool.rating}</span>
-            <span className="text-xs text-muted-foreground">({(tool.reviews / 1000).toFixed(1)}k)</span>
-          </div>
-          <ChevronRight className="w-4 h-4 text-purple-400 group-hover:translate-x-1 transition-transform" />
-        </div>
-      </div>
-    </motion.a>
   );
 }

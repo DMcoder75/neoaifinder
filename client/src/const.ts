@@ -1,4 +1,5 @@
-// Constants exported from shared/const are available via direct imports
+// Re-export from shared/const
+export { VISIONARY_POSSIBILITIES, AI_TOOLS, AI_CATEGORIES } from "../../shared/const";
 
 // Generate login URL at runtime so redirect URI reflects the current origin.
 export const getLoginUrl = () => {
